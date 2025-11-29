@@ -154,13 +154,19 @@ are some free places still.
 - [99sounds](https://99sounds.org/)
 - [Splice Instrument](https://splice.com/instrument)
 - [Philharmonia Orchestra](https://philharmonia.co.uk/resources/sound-samples/)
-- https://www.reddit.com/r/Drumkits/comments/n0e6e8/my_personal_stash_is_all_you_need/
+- [Rellem's stash](https://www.reddit.com/r/Drumkits/comments/n0e6e8/my_personal_stash_is_all_you_need/])
+  _(saved here too)_
 
 ## Development
 
 ```zsh
+git clone git@github.com:cluesurf/wave.git
+cd wave
+git lfs fetch --all
 pnpm install
 ```
+
+Then to start dev server to see examples:
 
 ```zsh
 pnpm work
