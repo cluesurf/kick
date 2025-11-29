@@ -31,16 +31,17 @@ these to make music with things like
 Guitar and bass samples are tuned to Drop-D, and recording to the last
 fret on an example instrument so you have every note, which were then
 aligned so they are all plucked at the same time to make programmatic
-music-making straightforward.
-
-Guitar and bass notes were recorded on real electric instruments without
-effects.
+music-making straightforward. These were made manually, recorded on real
+electric instruments without effects.
 
 Regarding file names:
 
 - Files are named `string-<number>-<note>-as-<octave-note>.wav`.
 - The `x` like `Dx2` means "sharp", since you can't have `#` in the URL
   :p.
+
+[Rellem's stash](https://www.reddit.com/r/Drumkits/comments/n0e6e8/my_personal_stash_is_all_you_need/])
+were used to bootstrap basic drum/percussion sounds as well.
 
 ### Guitar Notes
 
@@ -154,8 +155,6 @@ are some free places still.
 - [99sounds](https://99sounds.org/)
 - [Splice Instrument](https://splice.com/instrument)
 - [Philharmonia Orchestra](https://philharmonia.co.uk/resources/sound-samples/)
-- [Rellem's stash](https://www.reddit.com/r/Drumkits/comments/n0e6e8/my_personal_stash_is_all_you_need/])
-  _(saved here too)_
 
 ## Development
 
