@@ -1,0 +1,13 @@
+.vscode
+.prettierignore
+.prettierrc.json
+.eslintrc.json
+tsconfig.json
+tsconfig.lib.json
+/case
+/tmp
+/test
+/index.ts
+.dockerignore
+remix.env.d.ts
+vite.config.ts

@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
+    "lib": ["es2020", "dom", "DOM.Iterable"],
+    "outDir": "host",
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": true,
+    "moduleResolution": "bundler",
+    "strictNullChecks": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "noUncheckedIndexedAccess": true,
+    "baseUrl": ".",
+    "allowJs": true,
+    "noErrorTruncation": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "typeRoots": ["node_modules/@types"],
+    "noImplicitAny": false,
+    "jsx": "react-jsx",
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./code/*"],
+      "~/*": ["./case/app/*"]
+    }
+  },
+  "include": ["code/**/*.ts", "case/**/*.ts", "case/**/*.tsx", "remix.env.d.ts"],
+  "exclude": ["node_modules", "host", "tmp", "case/build", "case/public/build"]
+}
