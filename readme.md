@@ -58,8 +58,9 @@ Regarding file names:
 - The `x` like `Dx2` means "sharp", since you can't have `#` in the URL
   :p.
 
+Caching some of
 [Rellem's stash](https://www.reddit.com/r/Drumkits/comments/n0e6e8/my_personal_stash_is_all_you_need/])
-were used to bootstrap many of the basic drum/percussion sounds as well.
+of drum samples as well.
 
 ### Guitar Notes
 
