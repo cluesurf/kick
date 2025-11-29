@@ -29,6 +29,17 @@
       "~/*": ["./case/app/*"]
     }
   },
-  "include": ["code/**/*.ts", "case/**/*.ts", "case/**/*.tsx", "remix.env.d.ts"],
-  "exclude": ["node_modules", "host", "tmp", "case/build", "case/public/build"]
+  "include": [
+    "code/**/*.ts",
+    "case/**/*.ts",
+    "case/**/*.tsx",
+    "remix.env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "host",
+    "tmp",
+    "case/build",
+    "case/public/build"
+  ]
 }
