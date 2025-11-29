@@ -25,11 +25,13 @@ All `.wav` files are found in the
 you can get them all by cloning the repo as per the instructions at the
 bottom of this readme)._
 
+Here is a basic
+**[sample song](https://www.youtube.com/shorts/Nr_AjqE9byQ)** made from
+some of them.
+
 It exists because it was way too hard to find free basic samples for
 these to make music with things like
 [Tone.js](https://github.com/tonejs/tone.js).
-
-**[Sample song](https://www.youtube.com/shorts/Nr_AjqE9byQ)**.
 
 ## Sounds
 
