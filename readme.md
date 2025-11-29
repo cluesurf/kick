@@ -20,11 +20,6 @@
 These are sound samples for guitar, bass, and drums for now, and might
 include more in the future.
 
-All `.wav` files are found in the
-[`./base`](https://github.com/cluesurf/wave/tree/make/base) folder _(but
-you can get them all by cloning the repo as per the instructions at the
-bottom of this readme)._
-
 Here is a basic
 **[sample song](https://www.youtube.com/shorts/Nr_AjqE9byQ)** made from
 some of them.
@@ -32,6 +27,18 @@ some of them.
 It exists because it was way too hard to find free basic samples for
 these to make music with things like
 [Tone.js](https://github.com/tonejs/tone.js).
+
+## Downloading
+
+All `.wav` files are found in the
+[`./base`](https://github.com/cluesurf/wave/tree/make/base) folder _(but
+you can get them all by cloning the repo as per these instructions)._
+
+```zsh
+git clone git@github.com:cluesurf/wave.git
+cd wave
+git lfs fetch --all
+```
 
 ## Sounds
 
@@ -166,9 +173,6 @@ are some free places still.
 ## Development
 
 ```zsh
-git clone git@github.com:cluesurf/wave.git
-cd wave
-git lfs fetch --all
 pnpm install
 ```
 
