@@ -32,7 +32,7 @@ these to make music with things like
 
 All `.wav` files are found in the
 [`./base`](https://github.com/cluesurf/wave/tree/make/base) folder _(but
-you can get them all by cloning the repo as per these instructions)._
+you can get them all by cloning the repo like this):_
 
 ```zsh
 git clone git@github.com:cluesurf/wave.git
