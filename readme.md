@@ -55,7 +55,7 @@ Regarding file names:
   :p.
 
 [Rellem's stash](https://www.reddit.com/r/Drumkits/comments/n0e6e8/my_personal_stash_is_all_you_need/])
-were used to bootstrap basic drum/percussion sounds as well.
+were used to bootstrap many of the basic drum/percussion sounds as well.
 
 ### Guitar Notes
 
