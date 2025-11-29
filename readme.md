@@ -188,7 +188,7 @@ pnpm work
 ```
 
 Visit [`http://localhost:5173`](http://localhost:5173) in the browser to
-see some sample songs, defined in the `./case/*` folder.
+see some sample songs, defined in the `./case/songs/*` folder.
 
 ## License
 
