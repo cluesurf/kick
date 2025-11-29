@@ -6,6 +6,10 @@
 <br/>
 <br/>
 
+<p align='center'>
+  <img src='https://github.com/cluesurf/wave/blob/make/view/wave.svg?raw=true' height='256'>
+</p>
+
 <h3 align='center'>@cluesurf/wave</h3>
 <p align='center'>
   Free Basic Real Instrument Samples
