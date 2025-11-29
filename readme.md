@@ -12,7 +12,7 @@
 
 <h3 align='center'>@cluesurf/wave</h3>
 <p align='center'>
-  Free Basic Real Instrument Samples
+  Basic Real Instrument Samples
 </p>
 
 <br/>
