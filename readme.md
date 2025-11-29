@@ -195,6 +195,8 @@ see some sample songs, defined in the `./case/*` folder.
 - Code: MIT
 - Files: Public Domain
 
+![https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/publicdomain.svg](https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/publicdomain.svg)
+
 ## ClueSurf
 
 Made by [ClueSurf](https://clue.surf), meditating on the universe ¤.
