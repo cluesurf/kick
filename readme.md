@@ -22,7 +22,8 @@
 ## Introduction
 
 These are sound samples for guitar, bass, and drums for now, and might
-include more in the future.
+include more in the future. **100% public domain**, **free** sound
+samples of individual notes and sounds.
 
 Here is a basic
 **[sample song](https://www.youtube.com/shorts/Nr_AjqE9byQ)** made from
@@ -57,10 +58,6 @@ Regarding file names:
 - Files are named `string-<number>-<note>-as-<octave-note>.wav`.
 - The `x` like `Dx2` means "sharp", since you can't have `#` in the URL
   :p.
-
-Caching some of
-[Rellem's stash](https://www.reddit.com/r/Drumkits/comments/n0e6e8/my_personal_stash_is_all_you_need/])
-of drum samples as well.
 
 ### Guitar Notes
 
@@ -161,6 +158,13 @@ of drum samples as well.
 | `F4`  | `/base/bass/string-1-F-as-F4.wav`   |
 | `F#4` | `/base/bass/string-1-Fx-as-Fx4.wav` |
 | `G4`  | `/base/bass/string-1-G-as-G4.wav`   |
+
+## Sources
+
+- Manually recorded sounds
+- https://github.com/sgossner/VCSL
+- [Rellem's stash](https://www.reddit.com/r/Drumkits/comments/n0e6e8/my_personal_stash_is_all_you_need/])
+- https://freepats.zenvoid.org
 
 ## Other Places to Find Free Sound Samples
 
