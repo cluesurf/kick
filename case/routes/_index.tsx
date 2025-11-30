@@ -293,29 +293,17 @@ export default function Index() {
     loadSongs()
   }, [])
 
-  const toggleSong = async (songId: string) => {
-    const instance = loadedSongs[songId]
-    if (!instance) return
-
-    // Stop all other songs
+  // Helper function to stop all audio (songs and samples)
+  const stopAllAudio = () => {
+    // Stop all playing songs
     for (const [id, song] of Object.entries(loadedSongs)) {
-      if (id !== songId && song.isPlaying) {
+      if (song.isPlaying) {
         song.stop()
       }
     }
+    setPlayingSong(null)
 
-    // Toggle this song
-    if (!instance.isPlaying) {
-      await instance.start()
-      setPlayingSong(songId)
-    } else {
-      instance.stop()
-      setPlayingSong(null)
-    }
-  }
-
-  const playSample = async (samplePath: string) => {
-    // Stop current playing sample if any
+    // Stop current playing sample
     if (currentAudioSource) {
       try {
         currentAudioSource.stop()
@@ -324,6 +312,31 @@ export default function Index() {
       }
       setCurrentAudioSource(null)
     }
+    setPlayingSample(null)
+  }
+
+  const toggleSong = async (songId: string) => {
+    const instance = loadedSongs[songId]
+    if (!instance) return
+
+    // If this song is already playing, just stop it
+    if (instance.isPlaying && playingSong === songId) {
+      instance.stop()
+      setPlayingSong(null)
+      return
+    }
+
+    // Stop all audio (songs and samples)
+    stopAllAudio()
+
+    // Start the new song
+    await instance.start()
+    setPlayingSong(songId)
+  }
+
+  const playSample = async (samplePath: string) => {
+    // Stop all audio (songs and samples)
+    stopAllAudio()
 
     try {
       // Create or reuse audio context
