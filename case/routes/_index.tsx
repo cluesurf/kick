@@ -393,7 +393,7 @@ export default function Index() {
                   onClick={() => toggleSong(song.id)}
                   disabled={!isLoaded}
                   className={`
-                    relative p-8 rounded-xl border-2 transition-all duration-300 transform
+                    relative p-8 rounded border-2 transition-all duration-300 transform
                     ${
                       isPlaying
                         ? 'bg-primary text-dark border-primary scale-105 shadow-2xl shadow-primary/50'
@@ -446,7 +446,7 @@ export default function Index() {
                             key={sample.path}
                             onClick={() => playSample(sample.path)}
                             className={`
-                            p-3 rounded-lg border transition-all duration-200
+                            p-3 rounded border transition-all duration-200
                             ${
                               playingSample === sample.path
                                 ? 'bg-primary text-dark border-primary scale-105'
