@@ -424,9 +424,6 @@ export default function Index() {
 
           {/* Navigation Buttons */}
           <div className="mb-12 p-6 bg-gray-800 rounded-lg">
-            <h3 className="text-xl font-semibold mb-4 text-white">
-              Quick Navigation
-            </h3>
             <div className="flex flex-wrap gap-2">
               {Object.entries(TITLE_MAPPINGS)
                 .filter(
