@@ -695,7 +695,545 @@ If you were implementing this from scratch for your own “virtual cello”:
 That is exactly what is happening in the commercial world, just wrapped
 in the VST/AU/AAX plugin API.
 
-If you want, next step we can:
+## Implementation Details 2
 
-- Sketch a minimal “virtual cello engine” architecture in TypeScript or
-  pseudocode that follows this DAW/plugin separation.
+Nice, this is a fun one.
+
+I’ll do two things:
+
+1. First, unpack that paragraph in fine-grained detail: what DAWs
+   actually do vs what “realism engines” (Kontakt, SWAM, etc.) do.
+2. Then sketch a TypeScript architecture for your own “Kontakt-style”
+   virtual cello sampler.
+
+You can treat it as a blueprint for a browser/Web Audio or Node audio
+engine.
+
+1. What “real DAWs” actually do for realism (in detail)
+
+That text said:
+
+> DAWs do not do it. DAWs route:
+>
+> - MIDI notes
+> - pitch bend
+> - CC1, CC2, CC11 (expression controllers)
+> - automation curves
+> - sample triggers
+>
+> The realism happens inside plugins.
+
+Let’s make that precise.
+
+a) Signal flow: controller → DAW → plugin
+
+Physical controller (MIDI keyboard, wind controller, MPE device)
+generates:
+
+- NoteOn / NoteOff events
+- Pitch Bend messages
+- Control Change (CC) messages like:
+
+  - CC1: Mod wheel (often mapped to dynamics in orchestral libs)
+  - CC2: Breath (often mapped to expression in wind/brass/strings libs)
+  - CC11: Expression (fine control of volume/dynamics)
+  - Other CCs for vibrato, bow noise, legato, etc.
+
+- Aftertouch / poly aftertouch
+- Program change, sometimes keyswitches, etc.
+
+The DAW does not interpret these semantically. It just:
+
+- Timestamps them
+- Records them on a MIDI track
+- Routes them to the target plugin instance
+- Plays them back at the correct time
+
+The plugin (Kontakt, SWAM, etc.) decides what to do with “NoteOn C3,
+velocity 78, CC1=92, CC11=64” in terms of actual sound.
+
+b) What the DAW offers “natively”
+
+On top of raw MIDI pass-through, DAWs give you several generic tools:
+
+- Automation lanes:
+
+  - You can draw curves for CC1, CC11, pitch bend, plugin parameters,
+    etc.
+  - DAW interpolates: at each buffer, it evaluates current automation
+    values and sends them to the plugin (as parameter changes or CC
+    events).
+
+- Time-stretch / pitch-edit on audio clips:
+
+  - Flex Pitch / Flex Time (Logic)
+  - Warp (Ableton)
+  - VariAudio (Cubase)
+  - These process raw audio clips, not live instrument models.
+  - Good for editing recorded cello phrases, not for “real-time virtual
+    cello playing” from scratch.
+
+- Simple MIDI transforms:
+
+  - Humanize timing/velocity
+  - Scale, transpose
+  - Arpeggiators
+  - MIDI plugins (e.g. Logic Scripter, REAPER JSFX) that can
+    algorithmically generate/modify MIDI
+
+All of this is still “symbolic plumbing”. The DAW is not thinking: “Ah,
+this is a cello. Bow must accelerate here, we must cross from D string
+to A string and change bow direction.”
+
+It just sees numbers.
+
+c) Where realism actually happens: inside instruments
+
+This is the critical line:
+
+> Realistic cello glissando in a DAW comes from:
+>
+> - a sampled-transition engine (Kontakt/Sine/Halion)
+> - or a physically modeled engine (SWAM) Not from the DAW itself.
+
+Two big families:
+
+1. Sample-based engines (Kontakt, SINE, HALion, etc.)
+
+They load:
+
+- Many gigabytes of samples:
+
+  - Sustains at multiple dynamics
+  - Staccato, spiccato, pizzicato, tremolo, sul pont, sul tasto, etc.
+  - Legato / portamento transitions between pairs of notes (C4→D4,
+    D4→E4, etc.)
+  - Release samples, bow-change samples, string-crossing samples
+
+They include logic like:
+
+- Articulation selection:
+
+  - via keyswitch (low keys trigger articulation changes)
+  - via CC (e.g. CC32 chooses articulation)
+  - via velocity or playing style (short note → staccato, etc.)
+
+- Dynamic selection:
+
+  - multiple dynamic layers (pp, p, mf, f, ff)
+  - crossfading between layers based on CC1/CC11
+
+- Round-robin:
+
+  - multiple slightly different recordings for the same note and
+    articulation
+  - chosen in rotation/randomly to avoid “machine gun” repeats
+
+- Legato engine:
+
+  - if notes overlap, interpret as legato
+  - check interval and speed
+  - play a special transition sample (e.g. C4 sustain → C4→E4 legato
+    transition → E4 sustain)
+
+- String/fingering logic:
+
+  - decide which “string” a note would be on
+  - choose the correct sample set (G-string vs D-string vs A-string vs
+    C-string) for timbral differences
+
+From the outside, the DAW just sends “NoteOn D4, CC1=80, CC11=60,
+previous note C4 still held.” The instrument says “Okay, that is likely
+a legato transition from C4 to D4 at a certain speed and dynamic; I’ll
+choose legato transition sample X, then sustain sample Y, crossfaded
+according to CC1/CC11, with G-string timbre.”
+
+2. Physical modeling engines (SWAM, Audio Modeling, etc.)
+
+Instead of playing back recordings of real notes, they implement a
+physics-inspired model:
+
+- Internal state: bow pressure, bow speed, bow position, string tension,
+  damping, body resonance, etc.
+- Inputs:
+
+  - Note events define string and stopped pitch
+  - CC1/CC2/CC11 define bow pressure/dynamics
+  - Pitch bend can modulate micro-pitch or slides
+  - Additional CCs can control vibrato depth/rate, position, etc.
+
+- The model generates sound:
+
+  - The engine integrates differential equations / waveguides / digital
+    filters to simulate string vibration and body response.
+  - It can smoothly glide between pitches and timbres because it isn’t
+    limited to discrete samples.
+
+The DAW still just sends MIDI + parameter automation. All instrument
+intelligence (physics, bowing, string crossing) lives inside the plugin.
+
+2. Sketching a “Kontakt-style” virtual cello sampler in TypeScript
+
+Now, suppose you want to architect your own sampler in TS, aiming for:
+
+- Multi-sample, multi-articulation cello
+- Legato transitions
+- Dynamics driven by CCs
+- Possibly Web Audio backend
+
+Not production-ready, but structurally sound.
+
+I’ll sketch the main layers.
+
+a) Core data structures
+
+You need a way to describe:
+
+- Which WAV belongs to which note, dynamic, articulation, and string.
+- How they should be triggered.
+
+Something like:
+
+```ts
+type MidiNote = number // 0–127
+type Velocity = number // 0–127
+type CcValue = number // 0–127
+
+type ArticulationId =
+  | 'sustain'
+  | 'staccato'
+  | 'spiccato'
+  | 'pizzicato'
+  | 'tremolo'
+  | 'legato-transition'
+  | 'bow-change'
+  | 'release'
+
+type CelloStringId = 'C' | 'G' | 'D' | 'A'
+
+interface SampleMeta {
+  url: string
+  rootNote: MidiNote
+  minNote: MidiNote
+  maxNote: MidiNote
+  minVelocity: Velocity
+  maxVelocity: Velocity
+  articulation: ArticulationId
+  dynamicLayer: number // e.g. 0=pp,1=p,2=mf,3=f,4=ff
+  stringId?: CelloStringId
+  roundRobinIndex?: number
+  loopStart?: number
+  loopEnd?: number
+}
+
+interface SampleMap {
+  samples: SampleMeta[]
+}
+```
+
+This is your “Kontakt .nki-like mapping” in JSON.
+
+b) Playback primitives
+
+You need primitives to actually make sound:
+
+- AudioBuffer loading/cache
+- Voice: one instance of a sample being played
+- Envelope generator for amplitude
+- Pitch + filter modulation
+
+In TS with Web Audio:
+
+```ts
+interface Voice {
+  id: string
+  note: MidiNote
+  velocity: Velocity
+  articulation: ArticulationId
+  stringId?: CelloStringId
+
+  // Web Audio nodes
+  source: AudioBufferSourceNode
+  gainNode: GainNode
+  filterNode?: BiquadFilterNode
+
+  startTime: number
+  releaseScheduled: boolean
+
+  stop(releaseTime: number): void
+}
+```
+
+Voice manager:
+
+```ts
+interface VoiceManager {
+  activeVoices: Map<string, Voice>
+
+  noteOn(note: MidiNote, velocity: Velocity, ctx: PlaybackContext): void
+  noteOff(note: MidiNote, ctx: PlaybackContext): void
+  allNotesOff(ctx: PlaybackContext): void
+}
+```
+
+Where `PlaybackContext` includes `AudioContext`, sample cache, and
+global settings.
+
+c) Articulation and mapping logic
+
+You need a “brain” that decides:
+
+- Which articulation to use
+- Which sample region to select
+- Which dynamic layer(s) to crossfade
+- Which round-robin index
+
+```ts
+interface PerformanceState {
+  lastNoteOn?: {
+    note: MidiNote
+    time: number
+  }
+  sustainPedal: boolean
+  cc: Record<number, CcValue> // CC number → value
+  currentArticulation: ArticulationId
+  roundRobinCounters: Record<string, number> // per articulation/string
+}
+
+interface SampleSelector {
+  selectSample(
+    note: MidiNote,
+    velocity: Velocity,
+    perf: PerformanceState,
+    map: SampleMap,
+  ): SampleMeta[]
+}
+```
+
+Design approach:
+
+1. Determine articulation:
+
+- If explicit keyswitch/CC chooses pizzicato, staccato, etc., use that.
+- Else infer by note length or velocity.
+
+2. Determine string:
+
+- Use a heuristic: for a given note, choose string that matches a given
+  fingering position (e.g. prefer D string for certain ranges unless
+  user overrides).
+- Or allow user to lock a string via keyswitch.
+
+3. Determine dynamic layers:
+
+- Map CC1/CC11 into a [0..1] “dynamic continuum”.
+- Blend between nearest dynamic layers (e.g. between mf and f).
+
+4. Determine round robin:
+
+- Maintain a per-(articulation,string,note-range) counter.
+- Increment each time, wrap around number of layers.
+
+Return 1–2 selected `SampleMeta` entries:
+
+- For simple use: just one sample.
+- For crossfade: two samples with weights derived from dynamic position.
+
+d) Legato / glissando engine
+
+This is where cello behavior gets interesting.
+
+You want:
+
+- If a new note arrives while old note is held → treat as legato.
+- Decide whether to:
+
+  - Play legato transition sample (if available).
+  - Or simply overlap 2 sustains with envelope shaping.
+
+Simplified interface:
+
+```ts
+interface LegatoEngine {
+  onNoteOn(
+    note: MidiNote,
+    velocity: Velocity,
+    time: number,
+    state: PerformanceState,
+  ): 'normal' | 'legato-transition'
+
+  getTransitionSample(
+    fromNote: MidiNote,
+    toNote: MidiNote,
+    map: SampleMap,
+  ): SampleMeta | null
+}
+```
+
+Example logic:
+
+- If previous note exists and:
+
+  - Time since last note < legatoThresholdMs
+  - Notes overlap (previous note not yet released)
+  - Interval within some max (e.g. <= perfect 5th)
+
+- Then:
+
+  - classify as legato
+  - try to find a `legato-transition` sample in `SampleMap` for that
+    interval and string.
+  - If found:
+
+    - play transition sample
+    - fade out old note
+    - then begin new sustain sample
+
+  - Else:
+
+    - alternative: crossfade between two sustain samples with a very
+      fast attack on the new note.
+
+e) Dynamics / expression engine
+
+You want smooth continuous control like SWAM/Kontakt using CC1/CC11:
+
+```ts
+interface DynamicsEngine {
+  getTargetGain(perf: PerformanceState): number // 0..1
+  getDynamicLayerBlend(perf: PerformanceState): {
+    lowerLayerIndex: number
+    upperLayerIndex: number
+    t: number // blend
+  }
+}
+```
+
+Implementation:
+
+- Map CC1 to coarse dynamic level (p..ff).
+- Map CC11 to overall volume scaling within that level.
+- Smooth values over time to avoid zipper noise (simple 1-pole filter).
+
+At runtime:
+
+- Update `GainNode.gain` inside each Voice based on aggregated dynamic
+  gain.
+- Optionally crossfade between two adjacent dynamic layers by fading
+  their voices.
+
+f) The main engine class
+
+Something like:
+
+```ts
+class CelloSamplerEngine {
+  private ctx: AudioContext
+  private sampleMap: SampleMap
+  private sampleCache: Map<string, AudioBuffer> = new Map()
+  private voiceManager: VoiceManager
+  private legatoEngine: LegatoEngine
+  private dynamicsEngine: DynamicsEngine
+  private sampleSelector: SampleSelector
+  private performanceState: PerformanceState
+
+  constructor(ctx: AudioContext, map: SampleMap, deps: { ... }) {
+    this.ctx = ctx
+    this.sampleMap = map
+    this.voiceManager = deps.voiceManager
+    this.legatoEngine = deps.legatoEngine
+    this.dynamicsEngine = deps.dynamicsEngine
+    this.sampleSelector = deps.sampleSelector
+    this.performanceState = {
+      cc: {},
+      currentArticulation: "sustain",
+      roundRobinCounters: {},
+    }
+  }
+
+  async loadAllSamples() {
+    for (const meta of this.sampleMap.samples) {
+      if (!this.sampleCache.has(meta.url)) {
+        const buffer = await this.loadBuffer(meta.url)
+        this.sampleCache.set(meta.url, buffer)
+      }
+    }
+  }
+
+  onMidiNoteOn(note: MidiNote, velocity: Velocity) {
+    const now = this.ctx.currentTime
+    const legatoMode =
+      this.legatoEngine.onNoteOn(note, velocity, now, this.performanceState)
+
+    const selected = this.sampleSelector.selectSample(
+      note,
+      velocity,
+      this.performanceState,
+      this.sampleMap
+    )
+
+    // create voices from selected samples,
+    // plus any legato transition if applicable
+    // then hand them to VoiceManager to schedule
+  }
+
+  onMidiNoteOff(note: MidiNote) {
+    this.voiceManager.noteOff(note, { ctx: this.ctx })
+  }
+
+  onMidiCc(ccNumber: number, value: CcValue) {
+    this.performanceState.cc[ccNumber] = value
+    // update dynamics, articulation, vibrato, etc.
+  }
+
+  onPitchBend(value: number) {
+    // propagate to active voices as pitch ratio
+  }
+
+  private async loadBuffer(url: string): Promise<AudioBuffer> {
+    const res = await fetch(url)
+    const arr = await res.arrayBuffer()
+    return await this.ctx.decodeAudioData(arr)
+  }
+}
+```
+
+This isn’t complete, but structurally it is similar to what a small
+“Kontakt-style” sampler does.
+
+g) Extending toward “real cello feel”
+
+You can push realism by adding:
+
+- String selection logic:
+
+  - Give the engine a concept of positions and string to favor.
+
+- Bowing model on top of samples:
+
+  - Use noise layers for bow scratch.
+  - Modulate noise with CC or envelope.
+
+- Release behavior:
+
+  - When NoteOff arrives, trigger dedicated release samples depending on
+    dynamics and length.
+
+- Performance scripting:
+
+  - Write rule tables:
+
+    - if velocity < 40 and duration < 120 ms → use “spiccato”
+    - if velocity > 80 and overlap > 50 ms → force legato
+    - if 3+ fast repeated notes → alternate round-robin sets that
+      emphasize bow changes.
+
+All of this lives in your engine. The DAW’s role is just:
+
+- Provide a MIDI track
+- Host a plugin (or a bridge to your TS/Web Audio engine)
+- Route notes / CCs / automation into it
+
+Which is exactly what the original text was pointing at: “DAWs do not
+simulate real instruments; they just deliver control streams. The
+realism engines live inside the instruments.”
