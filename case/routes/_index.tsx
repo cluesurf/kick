@@ -5,7 +5,7 @@ import type { Song } from '../types'
 import SAMPLES from '../settings/samples.json'
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'Wave Tune' }]
+  return [{ title: 'Wave' }]
 }
 
 // Song registry - add new songs here
@@ -23,22 +23,44 @@ const TITLE_MAPPINGS: Record<string, { title: string; level: number }> =
     guitar: { title: 'Guitar', level: 2 },
     bass: { title: 'Bass', level: 2 },
     drum: { title: 'Drum', level: 2 },
-    'drum/abstract': { title: 'Abstract (Drum)', level: 3 },
-    'drum/bell': { title: 'Bell', level: 3 },
-    'drum/blip': { title: 'Blip (Drum)', level: 3 },
-    'drum/bongo': { title: 'Bongo', level: 3 },
-    'drum/clap': { title: 'Clap', level: 3 },
-    'drum/clap/abstract': { title: 'Clap (Abstract)', level: 4 },
-    'drum/clap/bright': { title: 'Clap (Bright)', level: 4 },
-    'drum/clap/classic': { title: 'Clap (Classic)', level: 4 },
-    'drum/clap/deep': { title: 'Clap (Deep)', level: 4 },
-    'drum/clap/layered': { title: 'Clap (Layered)', level: 4 },
-    'drum/clap/noise': { title: 'Clap (Noise)', level: 4 },
-    'drum/clap/snap': { title: 'Clap (Snap)', level: 4 },
-    'drum/clap/synthetic': { title: 'Clap (Synthetic)', level: 4 },
-    'drum/clap/transient': { title: 'Clap (Transient)', level: 4 },
-    'drum/click': { title: 'Click', level: 3 },
-    'drum/conga': { title: 'Conga', level: 3 },
+    'drum/kick': { title: 'Kick Drum', level: 3 },
+    'drum/kick/808': { title: 'Kick (808)', level: 4 },
+    'drum/kick/classic': { title: 'Kick (Classic)', level: 4 },
+    'drum/kick/deep': { title: 'Kick (Deep)', level: 4 },
+    'drum/kick/heavy': { title: 'Kick (Heavy)', level: 4 },
+    'drum/kick/mid': { title: 'Kick (Mid)', level: 4 },
+    'drum/kick/processed-machine': {
+      title: 'Kick (Processed Machine)',
+      level: 4,
+    },
+    'drum/kick/punchy': { title: 'Kick (Punchy)', level: 4 },
+    'drum/kick/short-snappy': {
+      title: 'Kick (Short Snappy)',
+      level: 4,
+    },
+    'drum/kick/unusual': { title: 'Kick (Unusual)', level: 4 },
+    'drum/kick/various': { title: 'Kick (Various)', level: 4 },
+    'drum/snare': { title: 'Snare', level: 3 },
+    'drum/snare/808': { title: 'Snare (808)', level: 4 },
+    'drum/snare/body': { title: 'Snare (Body)', level: 4 },
+    'drum/snare/heavy': { title: 'Snare (Heavy)', level: 4 },
+    'drum/snare/layered': { title: 'Snare (Layered)', level: 4 },
+    'drum/snare/lo-fi-gritty': {
+      title: 'Snare (Lo-Fi Gritty)',
+      level: 4,
+    },
+    'drum/snare/low-mid': { title: 'Snare (Low Mid)', level: 4 },
+    'drum/snare/noise': { title: 'Snare (Noise)', level: 4 },
+    'drum/snare/processed-machine': {
+      title: 'Snare (Processed Machine)',
+      level: 4,
+    },
+    'drum/snare/punchy': { title: 'Snare (Punchy)', level: 4 },
+    'drum/snare/synthetic': {
+      title: 'Snare (Synthetic)',
+      level: 4,
+    },
+    'drum/snare/tight': { title: 'Snare (Tight)', level: 4 },
     'drum/cymbal': { title: 'Cymbal', level: 3 },
     'drum/cymbal/crash': { title: 'Crash', level: 4 },
     'drum/cymbal/effected': {
@@ -102,26 +124,33 @@ const TITLE_MAPPINGS: Record<string, { title: string; level: number }> =
       title: 'Cymbal (Synthetic)',
       level: 4,
     },
+    'drum/tom': { title: 'Tom', level: 3 },
+    'drum/tom/classic': { title: 'Tom (Classic)', level: 4 },
+    'drum/tom/heavy': { title: 'Tom (Heavy)', level: 4 },
+    'drum/tom/lazer': { title: 'Tom (Lazer)', level: 4 },
+    'drum/tom/short': { title: 'Tom (Short)', level: 4 },
+    'drum/tom/sub': { title: 'Tom (Sub)', level: 4 },
+    'drum/tom/synthetic': { title: 'Tom (Synthetic)', level: 4 },
+    'drum/tom/tone': { title: 'Tom (Tone)', level: 4 },
+    'drum/clap': { title: 'Clap', level: 3 },
+    'drum/clap/abstract': { title: 'Clap (Abstract)', level: 4 },
+    'drum/clap/bright': { title: 'Clap (Bright)', level: 4 },
+    'drum/clap/classic': { title: 'Clap (Classic)', level: 4 },
+    'drum/clap/deep': { title: 'Clap (Deep)', level: 4 },
+    'drum/clap/layered': { title: 'Clap (Layered)', level: 4 },
+    'drum/clap/noise': { title: 'Clap (Noise)', level: 4 },
+    'drum/clap/snap': { title: 'Clap (Snap)', level: 4 },
+    'drum/clap/synthetic': { title: 'Clap (Synthetic)', level: 4 },
+    'drum/clap/transient': { title: 'Clap (Transient)', level: 4 },
+    'drum/click': { title: 'Click', level: 3 },
+    'drum/bongo': { title: 'Bongo', level: 3 },
+    'drum/conga': { title: 'Conga', level: 3 },
+    'drum/rimshot': { title: 'Rimshot', level: 3 },
+    'drum/bell': { title: 'Bell', level: 3 },
+    'drum/blip': { title: 'Blip (Drum)', level: 3 },
+    'drum/abstract': { title: 'Abstract (Drum)', level: 3 },
     'drum/glitch': { title: 'Glitch', level: 3 },
     'drum/hand-drum': { title: 'Hand Drum', level: 3 },
-    'drum/hard': { title: 'Hard Drum', level: 3 },
-    'drum/kick': { title: 'Kick Drum', level: 3 },
-    'drum/kick/808': { title: 'Kick (808)', level: 4 },
-    'drum/kick/classic': { title: 'Kick (Classic)', level: 4 },
-    'drum/kick/deep': { title: 'Kick (Deep)', level: 4 },
-    'drum/kick/heavy': { title: 'Kick (Heavy)', level: 4 },
-    'drum/kick/mid': { title: 'Kick (Mid)', level: 4 },
-    'drum/kick/processed-machine': {
-      title: 'Kick (Processed Machine)',
-      level: 4,
-    },
-    'drum/kick/punchy': { title: 'Kick (Punchy)', level: 3 },
-    'drum/kick/short-snappy': {
-      title: 'Kick (Short Snappy)',
-      level: 4,
-    },
-    'drum/kick/unusual': { title: 'Kick (Unusual)', level: 4 },
-    'drum/kick/various': { title: 'Kick (Various)', level: 4 },
     'drum/layer': { title: 'Layer', level: 3 },
     'drum/layer/clap-tail': { title: 'Clap Tail', level: 4 },
     'drum/layer/live-snare': { title: 'Live Snare', level: 4 },
@@ -134,41 +163,12 @@ const TITLE_MAPPINGS: Record<string, { title: string; level: number }> =
     'drum/layer/sub-mid': { title: 'Sub Mid', level: 4 },
     'drum/layer/sub-verb': { title: 'Sub Verb', level: 4 },
     'drum/nu': { title: 'Nu Drum', level: 3 },
-    'drum/pop': { title: 'Pop Drum', level: 3 },
-    'drum/rimshot': { title: 'Rimshot', level: 3 },
+    'drum/pop': { title: 'Pop', level: 3 },
     'drum/shaker': { title: 'Shaker', level: 3 },
-    'drum/small': { title: 'Small Drum', level: 3 },
-    'drum/snare': { title: 'Snare', level: 3 },
-    'drum/snare/808': { title: 'Snare (808)', level: 4 },
-    'drum/snare/body': { title: 'Snare (Body)', level: 4 },
-    'drum/snare/heavy': { title: 'Snare (Heavy)', level: 4 },
-    'drum/snare/layered': { title: 'Snare (Layered)', level: 4 },
-    'drum/snare/lo-fi-gritty': {
-      title: 'Snare (Lo-Fi Gritty)',
-      level: 4,
-    },
-    'drum/snare/low-mid': { title: 'Snare (Low Mid)', level: 4 },
-    'drum/snare/noise': { title: 'Snare (Noise)', level: 4 },
-    'drum/snare/processed-machine': {
-      title: 'Snare (Processed Machine)',
-      level: 4,
-    },
-    'drum/snare/punchy': { title: 'Snare (Punchy)', level: 4 },
-    'drum/snare/synthetic': {
-      title: 'Snare (Synthetic)',
-      level: 4,
-    },
-    'drum/snare/tight': { title: 'Snare (Tight)', level: 4 },
+    'drum/hard': { title: 'Hard Drum', level: 3 },
     'drum/soft': { title: 'Soft Drum', level: 3 },
+    'drum/small': { title: 'Small Drum', level: 3 },
     'drum/timbale': { title: 'Timbale', level: 3 },
-    'drum/tom': { title: 'Tom', level: 3 },
-    'drum/tom/classic': { title: 'Tom (Classic)', level: 4 },
-    'drum/tom/heavy': { title: 'Tom (Heavy)', level: 4 },
-    'drum/tom/lazer': { title: 'Tom (Lazer)', level: 4 },
-    'drum/tom/short': { title: 'Tom (Short)', level: 4 },
-    'drum/tom/sub': { title: 'Tom (Sub)', level: 4 },
-    'drum/tom/synthetic': { title: 'Tom (Synthetic)', level: 4 },
-    'drum/tom/tone': { title: 'Tom (Tone)', level: 4 },
     'drum/various': { title: 'Various Drum', level: 3 },
   }
 
@@ -374,7 +374,7 @@ export default function Index() {
     <div className="min-h-screen bg-dark p-10">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-5xl font-bold text-center mb-12 bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
-          Wave Tune
+          Wave
         </h1>
 
         {loading ? (
@@ -393,17 +393,13 @@ export default function Index() {
                   onClick={() => toggleSong(song.id)}
                   disabled={!isLoaded}
                   className={`
-                    relative p-8 rounded border-2 transition-all duration-300 transform
+                    relative p-8 rounded border-2 transition-all duration-300 transform cursor-pointer
                     ${
                       isPlaying
                         ? 'bg-primary text-dark border-primary scale-105 shadow-2xl shadow-primary/50'
                         : 'bg-gray-800 text-white border-gray-700 hover:border-primary hover:scale-105 hover:shadow-xl'
                     }
-                    ${
-                      !isLoaded
-                        ? 'opacity-50 cursor-not-allowed'
-                        : 'cursor-pointer'
-                    }
+                    ${!isLoaded ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
                 >
                   <span className="text-xl font-semibold">
@@ -426,12 +422,57 @@ export default function Index() {
             Sample Library
           </h2>
 
+          {/* Navigation Buttons */}
+          <div className="mb-12 p-6 bg-gray-800 rounded-lg">
+            <h3 className="text-xl font-semibold mb-4 text-white">
+              Quick Navigation
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(TITLE_MAPPINGS)
+                .filter(
+                  ([_, mapping]) =>
+                    mapping.level === 2 || mapping.level === 3,
+                )
+                // .sort(([pathA, mappingA], [pathB, mappingB]) => {
+                //   // Sort by level first, then alphabetically
+                //   if (mappingA.level !== mappingB.level) {
+                //     return mappingA.level - mappingB.level
+                //   }
+                //   return pathA.localeCompare(pathB)
+                // })
+                .map(([path, mapping]) => (
+                  <button
+                    key={path}
+                    onClick={() => {
+                      const element = document.getElementById(
+                        `section-${path}`,
+                      )
+                      if (element) {
+                        element.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start',
+                        })
+                      }
+                    }}
+                    className={`
+                      px-4 py-2 rounded border cursor-pointer transition-all duration-200
+                      bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-600 hover:border-primary
+                      text-sm font-medium
+                    `}
+                  >
+                    {mapping.title}
+                  </button>
+                ))}
+            </div>
+          </div>
+
           <div className="space-y-8">
             {sampleSections.map(section => {
               return (
                 <div
                   key={section.path}
-                  className="mb-8"
+                  id={`section-${section.path}`}
+                  className="mb-8 scroll-mt-20"
                 >
                   <h2 className="text-2xl font-bold mb-4 text-white mt-0">
                     {section.title}
@@ -446,7 +487,7 @@ export default function Index() {
                             key={sample.path}
                             onClick={() => playSample(sample.path)}
                             className={`
-                            p-3 rounded border transition-all duration-200
+                            p-3 rounded border transition-all duration-200 cursor-pointer
                             ${
                               playingSample === sample.path
                                 ? 'bg-primary text-dark border-primary scale-105'
