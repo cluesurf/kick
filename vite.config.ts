@@ -23,8 +23,17 @@ export default defineConfig({
     {
       name: 'serve-base-files',
       configureServer(server) {
-        // Serve the base folder from the parent directory
-        server.middlewares.use('/base', express.static(join(__dirname, 'base')));
+        // Serve the base folder from the parent directory with caching headers
+        server.middlewares.use('/base', express.static(join(__dirname, 'base'), {
+          maxAge: '1y',
+          immutable: true,
+          setHeaders: (res, path) => {
+            // Set cache headers for audio files
+            if (path.endsWith('.wav') || path.endsWith('.mp3')) {
+              res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            }
+          }
+        }));
       }
     }
   ],
