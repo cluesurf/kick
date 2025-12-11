@@ -189,17 +189,8 @@ function calculateSequenceDuration(
   // In x/y time: x = beats per measure, y = which note gets the beat
   // For 5/8: 5 eighth notes per measure, eighth note gets the beat
   
-  // In Logic Pro and most DAWs, BPM in odd meters can be complex
-  // For 5/8 time, the BPM often refers to a perceived pulse rather than actual quarters
-  // Based on your actual duration, we need to adjust the tempo interpretation
-  
-  let effectiveBPM = bpm;
-  
-  // For 5/8 time signature, Logic Pro uses a different tempo reference
-  // Empirically, to get 5:04 from 1520 16th notes at "104 BPM", we need this factor
-  if (beatsPerMeasure === 5 && beatUnit === 8) {
-    effectiveBPM = bpm / 1.387; // This gives us ~75 BPM effective tempo
-  }
+  // Use the BPM as-is without any time signature adjustments
+  const effectiveBPM = bpm;
   
   // Convert note lengths to their duration relative to a quarter note
   const noteValues: Record<string, number> = {
