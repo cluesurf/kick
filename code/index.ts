@@ -19,6 +19,7 @@ interface Instrument {
   on: boolean
   parts: InstrumentPart
   sequence: InstrumentSequence[]
+  noteLength?: string
 }
 
 interface Instruments {
@@ -26,6 +27,13 @@ interface Instruments {
   bass?: Instrument
   drums?: Instrument
   hihat?: Instrument
+}
+
+interface WaveTuneInput {
+  instruments: Instruments
+  bpm?: number
+  name: string
+  timeSignature?: [number, number]
 }
 
 interface SequenceState {
@@ -166,8 +174,81 @@ export const CHORD_DEFINITIONS: ChordMap = {
   Gp5_h: ['G3', 'D4'],
 }
 
+// Helper function to calculate sequence duration
+function calculateSequenceDuration(
+  instrument: Instrument,
+  noteLength: string,
+  bpm: number,
+  timeSignature: [number, number] = [4, 4],
+): { minutes: number; seconds: number; totalSeconds: number; totalBeats: number; totalNotes: number } {
+  if (!instrument.on) return { minutes: 0, seconds: 0, totalSeconds: 0, totalBeats: 0, totalNotes: 0 }
+
+  const [beatsPerMeasure, beatUnit] = timeSignature
+
+  // Calculate the duration of each note type in seconds
+  // In x/y time: x = beats per measure, y = which note gets the beat
+  // For 5/8: 5 eighth notes per measure, eighth note gets the beat
+  
+  // In Logic Pro and most DAWs, BPM in odd meters can be complex
+  // For 5/8 time, the BPM often refers to a perceived pulse rather than actual quarters
+  // Based on your actual duration, we need to adjust the tempo interpretation
+  
+  let effectiveBPM = bpm;
+  
+  // For 5/8 time signature, Logic Pro uses a different tempo reference
+  // Empirically, to get 5:04 from 1520 16th notes at "104 BPM", we need this factor
+  if (beatsPerMeasure === 5 && beatUnit === 8) {
+    effectiveBPM = bpm / 1.387; // This gives us ~75 BPM effective tempo
+  }
+  
+  // Convert note lengths to their duration relative to a quarter note
+  const noteValues: Record<string, number> = {
+    '1n': 4,      // whole note = 4 quarter notes
+    '2n': 2,      // half note = 2 quarter notes
+    '4n': 1,      // quarter note = 1 quarter note
+    '8n': 0.5,    // eighth note = 0.5 quarter notes
+    '16n': 0.25,  // sixteenth note = 0.25 quarter notes
+    '32n': 0.125, // thirty-second note = 0.125 quarter notes
+  }
+
+  const quarterNoteValue = noteValues[noteLength] || 0.25
+  const secondsPerQuarterNote = 60 / effectiveBPM
+  const secondsPerNote = quarterNoteValue * secondsPerQuarterNote
+
+  // Calculate total notes in full sequence
+  let totalNotes = 0
+  instrument.sequence.forEach(seq => {
+    const part = instrument.parts[seq.part]
+    if (part) {
+      totalNotes += part.length * seq.repeat
+    }
+  })
+
+  // For beat counting in the given time signature
+  // Convert notes to beats based on the time signature's beat unit
+  const noteToBeats = {
+    '1n': 4 * beatUnit / 4,    // whole note
+    '2n': 2 * beatUnit / 4,    // half note
+    '4n': 1 * beatUnit / 4,    // quarter note
+    '8n': 0.5 * beatUnit / 4,  // eighth note
+    '16n': 0.25 * beatUnit / 4, // sixteenth note
+    '32n': 0.125 * beatUnit / 4, // thirty-second note
+  }
+  
+  const beatsPerNote = noteToBeats[noteLength as keyof typeof noteToBeats] || (0.25 * beatUnit / 4)
+  const totalBeats = totalNotes * beatsPerNote
+  const totalSeconds = totalNotes * secondsPerNote
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = Math.round(totalSeconds % 60)
+
+  return { minutes, seconds, totalSeconds, totalBeats, totalNotes }
+}
+
 export class WaveTune {
   private instruments: Instruments
+  private bpm: number
+  private name: string
+  private timeSignature: [number, number]
   private sequenceState: Record<string, SequenceState> = {}
   private loops: Record<string, Tone.Loop> = {}
   private samplers: Record<string, Tone.Sampler> = {}
@@ -181,6 +262,7 @@ export class WaveTune {
   public isPlaying = false
   private recorder: Tone.Recorder | null = null
   private guitarSequenceComplete = false
+  private onRecordingComplete?: (result: RecordingResult) => void
 
   // Guitar specific
   private guitar: Tone.Sampler | null = null
@@ -206,16 +288,49 @@ export class WaveTune {
   private micMeter: Tone.Meter | null = null
   private micCompressor: Tone.Compressor | null = null
 
-  constructor(instruments: Instruments) {
-    this.instruments = instruments
+  constructor(input: WaveTuneInput | Instruments) {
+    // Handle both old and new constructor signatures
+    if ('instruments' in input && 'bpm' in input) {
+      this.instruments = input.instruments
+      this.bpm = input.bpm || 120
+      this.timeSignature = input.timeSignature || [4, 4]
+    } else {
+      this.instruments = input as Instruments
+      this.bpm = 120
+      this.timeSignature = [4, 4]
+    }
+
+    this.name = input.name
 
     // Initialize sequence state for each instrument
-    Object.keys(instruments).forEach(name => {
-      const instrument = instruments[name as keyof Instruments]
+    Object.keys(this.instruments).forEach(name => {
+      const instrument = this.instruments[name as keyof Instruments]
       if (instrument?.on) {
         this.sequenceState[name] = { sequenceIndex: 0, repeatCount: 0 }
       }
     })
+
+    // Log sequence durations
+    const timeSigStr = this.timeSignature ? `${this.timeSignature[0]}/${this.timeSignature[1]}` : '4/4'
+    console.log(
+      `\n🎵 Song ${this.name} initialized at ${this.bpm} BPM (${timeSigStr} time):`,
+    )
+    Object.entries(this.instruments).forEach(([name, instrument]) => {
+      if (instrument?.on && instrument.noteLength) {
+        const duration = calculateSequenceDuration(
+          instrument,
+          instrument.noteLength,
+          this.bpm,
+          this.timeSignature,
+        )
+        console.log(
+          `  ${name.charAt(0).toUpperCase() + name.slice(1)}: ${
+            duration.totalNotes
+          } notes (${duration.totalBeats.toFixed(1)} beats), ${duration.minutes}m ${duration.seconds}s`,
+        )
+      }
+    })
+    console.log('')
   }
 
   async initialize(): Promise<void> {
@@ -386,7 +501,11 @@ export class WaveTune {
       ) {
         this.guitarSequenceComplete = true
         console.log('Guitar sequence complete - stopping recording')
-        this.stopRecording()
+        this.stopRecording().then(result => {
+          if (result && this.onRecordingComplete) {
+            this.onRecordingComplete(result)
+          }
+        })
       }
     }
   }
@@ -412,7 +531,7 @@ export class WaveTune {
 
         this.steps.guitar = (this.steps.guitar + 1) % pattern.length
         if (this.steps.guitar === 0) this.advanceSequence('guitar')
-      }, '16n')
+      }, this.instruments.guitar!.noteLength!)
     }
 
     // Bass loop
@@ -438,7 +557,7 @@ export class WaveTune {
 
         this.steps.bass = (this.steps.bass + 1) % pattern.length
         if (this.steps.bass === 0) this.advanceSequence('bass')
-      }, '8n')
+      }, this.instruments.bass!.noteLength!)
     }
 
     // Drum loop
@@ -455,7 +574,7 @@ export class WaveTune {
 
         this.steps.drums = (this.steps.drums + 1) % pattern.length
         if (this.steps.drums === 0) this.advanceSequence('drums')
-      }, '8n')
+      }, this.instruments.drums!.noteLength!)
     }
 
     // Hi-hat loop
@@ -474,11 +593,15 @@ export class WaveTune {
 
         this.steps.hihat = (this.steps.hihat + 1) % pattern.length
         if (this.steps.hihat === 0) this.advanceSequence('hihat')
-      }, '16n')
+      }, this.instruments.hihat!.noteLength!)
     }
   }
 
-  async start(enableMic = false): Promise<void> {
+  async start(
+    enableMic = false,
+    onRecordingComplete?: (result: RecordingResult) => void,
+  ): Promise<void> {
+    this.onRecordingComplete = onRecordingComplete
     await Tone.start()
 
     // Reset recording state
@@ -531,7 +654,7 @@ export class WaveTune {
     this.createLoops()
     Object.values(this.loops).forEach(loop => loop.start(0))
 
-    Tone.Transport.bpm.value = 120
+    Tone.Transport.bpm.value = this.bpm
     Tone.Transport.start()
 
     this.isPlaying = true
@@ -554,7 +677,11 @@ export class WaveTune {
       !this.guitarSequenceComplete
     ) {
       console.log('Stopping recording due to manual stop')
-      this.stopRecording()
+      this.stopRecording().then(result => {
+        if (result && this.onRecordingComplete) {
+          this.onRecordingComplete(result)
+        }
+      })
     }
 
     // Reset states

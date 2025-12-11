@@ -15,6 +15,11 @@ const SONGS: Song[] = [
     name: 'Home',
     module: () => import('../songs/home'),
   },
+  {
+    id: 'flowBeat',
+    name: 'Flow Beat',
+    module: () => import('../songs/flow-beat'),
+  },
 ]
 
 // Title mappings for drum sections
@@ -258,6 +263,9 @@ export default function Index() {
   const [audioContext, setAudioContext] = useState<AudioContext | null>(
     null,
   )
+  const [recordingUrls, setRecordingUrls] = useState<
+    Record<string, string>
+  >({})
 
   // Process sample sections from JSON data
   const sampleSections = useMemo(() => {
@@ -315,6 +323,16 @@ export default function Index() {
     setPlayingSample(null)
   }
 
+  // Clean up recording URLs on unmount
+  useEffect(() => {
+    return () => {
+      // Revoke all blob URLs to free memory
+      Object.values(recordingUrls).forEach(url => {
+        URL.revokeObjectURL(url)
+      })
+    }
+  }, [recordingUrls])
+
   const toggleSong = async (songId: string) => {
     const instance = loadedSongs[songId]
     if (!instance) return
@@ -329,8 +347,24 @@ export default function Index() {
     // Stop all audio (songs and samples)
     stopAllAudio()
 
-    // Start the new song
-    await instance.start()
+    // Clear previous recording for this song if it exists
+    if (recordingUrls[songId]) {
+      URL.revokeObjectURL(recordingUrls[songId])
+      setRecordingUrls(prev => {
+        const newUrls = { ...prev }
+        delete newUrls[songId]
+        return newUrls
+      })
+    }
+
+    // Start the new song with recording enabled
+    await instance.start(false, (result) => {
+      // Callback when recording completes
+      setRecordingUrls(prev => ({
+        ...prev,
+        [songId]: result.url,
+      }))
+    })
     setPlayingSong(songId)
   }
 
@@ -388,29 +422,43 @@ export default function Index() {
               const isLoaded = !!loadedSongs[song.id]
 
               return (
-                <button
-                  key={song.id}
-                  onClick={() => toggleSong(song.id)}
-                  disabled={!isLoaded}
-                  className={`
-                    relative p-8 rounded border-2 transition-all duration-300 transform cursor-pointer
-                    ${
-                      isPlaying
-                        ? 'bg-primary text-dark border-primary scale-105 shadow-2xl shadow-primary/50'
-                        : 'bg-gray-800 text-white border-gray-700 hover:border-primary hover:scale-105 hover:shadow-xl'
-                    }
-                    ${!isLoaded ? 'opacity-50 cursor-not-allowed' : ''}
-                  `}
-                >
-                  <span className="text-xl font-semibold">
-                    {song.name}
-                  </span>
-                  {isPlaying && (
-                    <span className="absolute top-2 right-3 text-2xl animate-pulse-slow">
-                      ♪
+                <div key={song.id} className="flex flex-col gap-3">
+                  <button
+                    onClick={() => toggleSong(song.id)}
+                    disabled={!isLoaded}
+                    className={`
+                      relative p-8 rounded border-2 transition-all duration-300 transform cursor-pointer
+                      ${
+                        isPlaying
+                          ? 'bg-primary text-dark border-primary scale-105 shadow-2xl shadow-primary/50'
+                          : 'bg-gray-800 text-white border-gray-700 hover:border-primary hover:scale-105 hover:shadow-xl'
+                      }
+                      ${!isLoaded ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                  >
+                    <span className="text-xl font-semibold">
+                      {song.name}
                     </span>
+                    {isPlaying && (
+                      <span className="absolute top-2 right-3 text-2xl animate-pulse-slow">
+                        ♪
+                      </span>
+                    )}
+                  </button>
+                  {recordingUrls[song.id] && (
+                    <button
+                      onClick={() => {
+                        const a = document.createElement('a')
+                        a.href = recordingUrls[song.id]
+                        a.download = `${song.name.toLowerCase().replace(/\s+/g, '-')}-recording.webm`
+                        a.click()
+                      }}
+                      className="p-3 bg-green-600 hover:bg-green-500 text-white rounded transition-colors duration-200"
+                    >
+                      Download Recording
+                    </button>
                   )}
-                </button>
+                </div>
               )
             })}
           </div>

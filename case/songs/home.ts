@@ -2,8 +2,11 @@
 import { WaveTune } from '../../code';
 
 export const home = new WaveTune({
-  guitar: {
+  name: 'home',
+  instruments: {
+    guitar: {
     on: true,
+    noteLength: '16n',
     parts: {
       main1: [
         'Dp5_l', '-', '-', '-', 'Dp5_l', '-', '-', '-', '-', '-', 'Ap5_l', '-', '-', '-',
@@ -65,6 +68,7 @@ export const home = new WaveTune({
 
   bass: {
     on: true,
+    noteLength: '8n',
     parts: {
       main1: [
         'D1', '-', '-', 'D1', '-', '-', 'D1', '-',
@@ -98,6 +102,7 @@ export const home = new WaveTune({
 
   drums: {
     on: true,
+    noteLength: '8n',
     parts: {
       mainold: [
         'b', 'b', 'b', '-', 'k', '-', '-', 'b',
@@ -125,6 +130,7 @@ export const home = new WaveTune({
 
   hihat: {
     on: true,
+    noteLength: '16n',
     parts: {
       main: [
         '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-',
@@ -139,4 +145,6 @@ export const home = new WaveTune({
       { part: 'main', repeat: 999 }
     ]
   }
+  },
+  bpm: 104
 })
