@@ -261,7 +261,8 @@ export class WaveTune {
 
   public isPlaying = false
   private recorder: Tone.Recorder | null = null
-  private guitarSequenceComplete = false
+  private allSequencesComplete = false
+  private instrumentSequenceComplete: Record<string, boolean> = {}
   private onRecordingComplete?: (result: RecordingResult) => void
 
   // Guitar specific
@@ -493,19 +494,31 @@ export class WaveTune {
         )
       }
 
-      // Check if guitar sequence is complete
-      if (
-        instrumentName === 'guitar' &&
-        state.sequenceIndex === 0 &&
-        !this.guitarSequenceComplete
-      ) {
-        this.guitarSequenceComplete = true
-        console.log('Guitar sequence complete - stopping recording')
-        this.stopRecording().then(result => {
-          if (result && this.onRecordingComplete) {
-            this.onRecordingComplete(result)
-          }
+      // Check if this instrument's sequence is complete
+      if (state.sequenceIndex === 0 && !this.instrumentSequenceComplete[instrumentName]) {
+        this.instrumentSequenceComplete[instrumentName] = true
+        console.log(`${instrumentName} sequence complete`)
+        
+        // Check if all active instruments have completed their sequences
+        const allComplete = Object.keys(this.instruments).every(name => {
+          const instrument = this.instruments[name as keyof Instruments]
+          if (!instrument?.on) return true // Skip inactive instruments
+          return this.instrumentSequenceComplete[name] === true
         })
+        
+        if (allComplete && !this.allSequencesComplete) {
+          this.allSequencesComplete = true
+          console.log('All sequences complete - stopping recording and playback')
+          
+          // Stop recording first
+          this.stopRecording().then(result => {
+            if (result && this.onRecordingComplete) {
+              this.onRecordingComplete(result)
+            }
+            // Then stop playback
+            this.stop()
+          })
+        }
       }
     }
   }
@@ -605,7 +618,16 @@ export class WaveTune {
     await Tone.start()
 
     // Reset recording state
-    this.guitarSequenceComplete = false
+    this.allSequencesComplete = false
+    this.instrumentSequenceComplete = {}
+    
+    // Initialize sequence tracking for active instruments
+    Object.keys(this.instruments).forEach(name => {
+      const instrument = this.instruments[name as keyof Instruments]
+      if (instrument?.on) {
+        this.instrumentSequenceComplete[name] = false
+      }
+    })
 
     // Enable microphone if requested
     if (enableMic && this.microphone && this.micMeter && this.micGain) {
@@ -674,7 +696,7 @@ export class WaveTune {
     // Stop recording if it's still active
     if (
       this.recorder?.state === 'started' &&
-      !this.guitarSequenceComplete
+      !this.allSequencesComplete
     ) {
       console.log('Stopping recording due to manual stop')
       this.stopRecording().then(result => {
