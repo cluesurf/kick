@@ -364,6 +364,13 @@ export default function Index() {
         ...prev,
         [songId]: result.url,
       }))
+      
+      // Automatically trigger download
+      const songName = SONGS.find(s => s.id === songId)?.name || songId
+      const a = document.createElement('a')
+      a.href = result.url
+      a.download = `${songName.toLowerCase().replace(/\s+/g, '-')}-recording.webm`
+      a.click()
     })
     setPlayingSong(songId)
   }
@@ -455,7 +462,7 @@ export default function Index() {
                       }}
                       className="p-3 bg-green-600 hover:bg-green-500 text-white rounded transition-colors duration-200"
                     >
-                      Download Recording
+                      Download Recording Again
                     </button>
                   )}
                 </div>
