@@ -326,6 +326,21 @@ export class WaveTune {
   }
 
   async initialize(): Promise<void> {
+    // Validate that all sequence parts exist in parts object
+    Object.entries(this.instruments).forEach(([instrumentName, instrument]) => {
+      if (instrument?.on && instrument.sequence && instrument.parts) {
+        instrument.sequence.forEach((seq, index) => {
+          if (!instrument.parts![seq.part]) {
+            throw new Error(
+              `WaveTune "${this.name}": Sequence part "${seq.part}" at index ${index} ` +
+              `for instrument "${instrumentName}" does not exist in parts. ` +
+              `Available parts: ${Object.keys(instrument.parts!).join(', ')}`
+            )
+          }
+        })
+      }
+    })
+
     // Create simple rock distortion (amp-like)
     const finalGain = new Tone.Gain(0.7).toDestination()
 

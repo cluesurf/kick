@@ -1,8 +1,8 @@
 
-import { WaveTune } from '../../code';
+import { WaveTune } from '../../../code';
 
-export const flowBeat = new WaveTune({
-  name: 'flow-beat',
+export const team0 = new WaveTune({
+  name: 'team0',
   timeSignature: [5, 8],
   instruments: {
     guitar: {

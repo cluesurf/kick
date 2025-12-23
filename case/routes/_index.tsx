@@ -16,9 +16,24 @@ const SONGS: Song[] = [
     module: () => import('../songs/home'),
   },
   {
-    id: 'flowBeat',
-    name: 'Flow Beat',
-    module: () => import('../songs/flow-beat'),
+    id: 'team0',
+    name: 'Team 0',
+    module: () => import('../songs/team/0'),
+  },
+  {
+    id: 'teamBreath',
+    name: 'Team Breath',
+    module: () => import('../songs/team/breath'),
+  },
+  {
+    id: 'teamPulse1',
+    name: 'Team Pulse 1',
+    module: () => import('../songs/team/pulse-1'),
+  },
+  {
+    id: 'teamBeat',
+    name: 'Team Tick',
+    module: () => import('../songs/team/beat'),
   },
 ]
 
@@ -254,7 +269,9 @@ export default function Index() {
     Record<string, WaveTune>
   >({})
   const [loading, setLoading] = useState(true)
-  const [playingSong, setPlayingSong] = useState<string | null>(null)
+  const [playingSongs, setPlayingSongs] = useState<Set<string>>(
+    new Set(),
+  )
   const [playingSample, setPlayingSample] = useState<string | null>(
     null,
   )
@@ -266,6 +283,9 @@ export default function Index() {
   const [recordingUrls, setRecordingUrls] = useState<
     Record<string, string>
   >({})
+  const [completedSongs, setCompletedSongs] = useState<Set<string>>(
+    new Set(),
+  )
 
   // Process sample sections from JSON data
   const sampleSections = useMemo(() => {
@@ -301,16 +321,8 @@ export default function Index() {
     loadSongs()
   }, [])
 
-  // Helper function to stop all audio (songs and samples)
-  const stopAllAudio = () => {
-    // Stop all playing songs
-    for (const [id, song] of Object.entries(loadedSongs)) {
-      if (song.isPlaying) {
-        song.stop()
-      }
-    }
-    setPlayingSong(null)
-
+  // Helper function to stop all samples (but not songs anymore)
+  const stopAllSamples = () => {
     // Stop current playing sample
     if (currentAudioSource) {
       try {
@@ -338,16 +350,20 @@ export default function Index() {
     if (!instance) return
 
     // If this song is already playing, just stop it
-    if (instance.isPlaying && playingSong === songId) {
+    if (instance.isPlaying && playingSongs.has(songId)) {
       instance.stop()
-      setPlayingSong(null)
+      setPlayingSongs(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(songId)
+        return newSet
+      })
       return
     }
 
-    // Stop all audio (songs and samples)
-    stopAllAudio()
+    // Stop samples only
+    stopAllSamples()
 
-    // Clear previous recording for this song if it exists
+    // Clear previous recording and completed status for this song if it exists
     if (recordingUrls[songId]) {
       URL.revokeObjectURL(recordingUrls[songId])
       setRecordingUrls(prev => {
@@ -356,28 +372,38 @@ export default function Index() {
         return newUrls
       })
     }
+    setCompletedSongs(prev => {
+      const newSet = new Set(prev)
+      newSet.delete(songId)
+      return newSet
+    })
 
-    // Start the new song with recording enabled
-    await instance.start(false, (result) => {
+    // Start the new song without mic but with recording callback for when it completes
+    await instance.start(false, result => {
       // Callback when recording completes
       setRecordingUrls(prev => ({
         ...prev,
         [songId]: result.url,
       }))
-      
-      // Automatically trigger download
-      const songName = SONGS.find(s => s.id === songId)?.name || songId
-      const a = document.createElement('a')
-      a.href = result.url
-      a.download = `${songName.toLowerCase().replace(/\s+/g, '-')}-recording.webm`
-      a.click()
+
+      // Mark song as completed
+      setCompletedSongs(prev => new Set(prev).add(songId))
+
+      // Remove from playing songs
+      setPlayingSongs(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(songId)
+        return newSet
+      })
     })
-    setPlayingSong(songId)
+
+    // Add to playing songs
+    setPlayingSongs(prev => new Set(prev).add(songId))
   }
 
   const playSample = async (samplePath: string) => {
-    // Stop all audio (songs and samples)
-    stopAllAudio()
+    // Stop samples only (songs can keep playing)
+    stopAllSamples()
 
     try {
       // Create or reuse audio context
@@ -425,11 +451,15 @@ export default function Index() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {SONGS.map(song => {
-              const isPlaying = playingSong === song.id
+              const isPlaying = playingSongs.has(song.id)
               const isLoaded = !!loadedSongs[song.id]
+              const isCompleted = completedSongs.has(song.id)
 
               return (
-                <div key={song.id} className="flex flex-col gap-3">
+                <div
+                  key={song.id}
+                  className="flex flex-col gap-3"
+                >
                   <button
                     onClick={() => toggleSong(song.id)}
                     disabled={!isLoaded}
@@ -438,9 +468,13 @@ export default function Index() {
                       ${
                         isPlaying
                           ? 'bg-primary text-dark border-primary scale-105 shadow-2xl shadow-primary/50'
+                          : isCompleted
+                          ? 'bg-gray-700 text-white border-gray-600 hover:border-primary hover:scale-105 hover:shadow-xl'
                           : 'bg-gray-800 text-white border-gray-700 hover:border-primary hover:scale-105 hover:shadow-xl'
                       }
-                      ${!isLoaded ? 'opacity-50 cursor-not-allowed' : ''}
+                      ${
+                        !isLoaded ? 'opacity-50 cursor-not-allowed' : ''
+                      }
                     `}
                   >
                     <span className="text-xl font-semibold">
@@ -451,18 +485,25 @@ export default function Index() {
                         ♪
                       </span>
                     )}
+                    {isCompleted && !isPlaying && (
+                      <span className="absolute top-2 right-3 text-xl">
+                        ✓
+                      </span>
+                    )}
                   </button>
-                  {recordingUrls[song.id] && (
+                  {recordingUrls[song.id] && isCompleted && (
                     <button
                       onClick={() => {
                         const a = document.createElement('a')
-                        a.href = recordingUrls[song.id]
-                        a.download = `${song.name.toLowerCase().replace(/\s+/g, '-')}-recording.webm`
+                        a.href = recordingUrls[song.id]!
+                        a.download = `${song.name
+                          .toLowerCase()
+                          .replace(/\s+/g, '-')}-recording.webm`
                         a.click()
                       }}
                       className="p-3 bg-green-600 hover:bg-green-500 text-white rounded transition-colors duration-200"
                     >
-                      Download Recording Again
+                      Download Recording
                     </button>
                   )}
                 </div>

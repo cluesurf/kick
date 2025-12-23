@@ -2,3 +2,4 @@ host
 node_modules
 tmp
 case/songs/*.ts
+case/songs/**/*.ts
