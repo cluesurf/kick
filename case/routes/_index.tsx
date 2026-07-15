@@ -35,6 +35,26 @@ const SONGS: Song[] = [
     name: 'Team Tick',
     module: () => import('../songs/team/beat'),
   },
+  {
+    id: 'talkBreath',
+    name: 'Talk Breath',
+    module: () => import('../songs/talk/breath'),
+  },
+  {
+    id: 'talkPulse',
+    name: 'Talk Pulse',
+    module: () => import('../songs/talk/pulse'),
+  },
+  {
+    id: 'tuneBreath',
+    name: 'Tune Breath',
+    module: () => import('../songs/tune/breath'),
+  },
+  {
+    id: 'tunePulse',
+    name: 'Tune Pulse',
+    module: () => import('../songs/tune/pulse'),
+  },
 ]
 
 // Title mappings for drum sections
